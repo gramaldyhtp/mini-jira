@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "8000:8000"
+    depends_on:
+      - user-service
+      - task-service
+      - payment-service
+      - notification-service
+      - report-service
+      - audit-service
+      - activity-log-service
+      - inventory-service
+    networks:
+      - mini-jira-net
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    networks:
+      - mini-jira-net
+
+  task-service:
+    build: ./task-service
+    container_name: task-service
+    networks:
+      - mini-jira-net
+
+  payment-service:
+    build: ./payment-service
+    container_name: payment-service
+    networks:
+      - mini-jira-net
+
+  notification-service:
+    build: ./notification-service
+    container_name: notification-service
+    networks:
+      - mini-jira-net
+
+  report-service:
+    build: ./report-service
+    container_name: report-service
+    networks:
+      - mini-jira-net
+
+  audit-service:
+    build: ./audit-service
+    container_name: audit-service
+    networks:
+      - mini-jira-net
+
+  activity-log-service:
+    build: ./activity-log-service
+    container_name: activity-log-service
+    networks:
+      - mini-jira-net
+
+  inventory-service:
+    build: ./inventory-service
+    container_name: inventory-service
+    networks:
+      - mini-jira-net
+
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - mini-jira-net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - mini-jira-net
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - mini-jira-net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - mini-jira-net
+
+volumes:
+  mongo-data:
+
+networks:
+  mini-jira-net:
+    driver: bridge
+
